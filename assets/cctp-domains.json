@@ -1,0 +1,39 @@
+{
+  "_comment": "Circle CCTP V2 deployment registry. TokenMessengerV2 + MessageTransmitterV2 are CREATE2 deployed across all chains, so addresses are identical. Verified on-chain via eth_getCode on Pharos, Ethereum, Base, Avalanche, Polygon, Optimism.",
+  "_addresses_uniform": {
+    "tokenMessengerV2":   "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+    "messageTransmitterV2": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64"
+  },
+  "_iris_api": {
+    "v2_endpoint": "https://iris-api.circle.com/v2/messages/{sourceDomain}/{txHash}",
+    "v2_sandbox":  "https://iris-api-sandbox.circle.com/v2/messages/{sourceDomain}/{txHash}",
+    "auth": "none",
+    "_note": "GET request. Returns messages[] with status='complete' when attestation ready."
+  },
+  "_transfer_modes": {
+    "standard": { "fee": "0", "speed": "minutes-to-15min", "supportedOnPharos": true,  "minFinalityThreshold": 2000 },
+    "fast":     { "fee": "scaled $0.02-$20", "speed": "seconds", "supportedOnPharos": false, "minFinalityThreshold": 1000 }
+  },
+  "domains": {
+    "ethereum":  { "domain": 0,  "chainId": 1,     "tokenMessenger": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d", "messageTransmitter": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64", "verified": true },
+    "avalanche": { "domain": 1,  "chainId": 43114, "tokenMessenger": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d", "messageTransmitter": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64", "verified": true },
+    "optimism":  { "domain": 2,  "chainId": 10,    "tokenMessenger": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d", "messageTransmitter": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64", "verified": true },
+    "arbitrum":  { "domain": 3,  "chainId": 42161, "tokenMessenger": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d", "messageTransmitter": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64", "verified": false, "_note": "RPC blocked from build env; addresses match Circle published deployment" },
+    "base":      { "domain": 6,  "chainId": 8453,  "tokenMessenger": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d", "messageTransmitter": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64", "verified": true },
+    "polygon":   { "domain": 7,  "chainId": 137,   "tokenMessenger": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d", "messageTransmitter": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64", "verified": true },
+    "pharos":    { "domain": 31, "chainId": 1672,  "tokenMessenger": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d", "messageTransmitter": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64", "verified": true, "fastTransferSupported": false, "_note": "Pharos supports Standard Transfer only" }
+  },
+  "abi": {
+    "depositForBurn": {
+      "v2_signature": "depositForBurn(uint256 amount, uint32 destinationDomain, bytes32 mintRecipient, address burnToken, bytes32 destinationCaller, uint256 maxFee, uint32 minFinalityThreshold)",
+      "v2_short_signature": "depositForBurn(uint256,uint32,bytes32,address,bytes32,uint256,uint32)",
+      "v1_short_signature": "depositForBurn(uint256,uint32,bytes32,address)",
+      "_note": "V2 adds destinationCaller, maxFee, minFinalityThreshold. For permissionless mint, destinationCaller = 0x0 bytes32. For Standard Transfer, maxFee = 0."
+    },
+    "receiveMessage": {
+      "signature": "receiveMessage(bytes message, bytes attestation)",
+      "short_signature": "receiveMessage(bytes,bytes)",
+      "returns": "bool success"
+    }
+  }
+}

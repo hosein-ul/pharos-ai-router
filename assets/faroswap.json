@@ -1,0 +1,38 @@
+{
+  "_comment": "Faroswap is Pharos's native DEX, forked from DODO. Uses DODO PMM (Proactive Market Maker). The router executes mixSwap calls with off-chain routed paths.",
+  "router": {
+    "address": "0xA5cA5Fbe34e444F366B373170541ec6902b0F75c",
+    "chain": "pharos",
+    "verified": true,
+    "_note": "Selector 0x0a5ea466 (mixSwap) confirmed via bytecode scan"
+  },
+  "selectors": {
+    "mixSwap": "0x0a5ea466",
+    "_signature": "mixSwap(address fromToken, address toToken, uint256 fromTokenAmount, uint256 expReturnAmount, uint256 minReturnAmount, address[] mixAdapters, address[] mixPairs, address[] assetTo, uint256 directions, bytes[] moreInfos, uint256 deadLine)"
+  },
+  "routeApi": {
+    "endpoint": "https://api.dodoex.io/route-service/v2/widget/getdodoroute",
+    "chainIdParam": 1672,
+    "requiredParams": ["chainId", "fromTokenAddress", "toTokenAddress", "fromAmount", "slippage", "userAddr", "deadLine", "apikey"],
+    "responseShape": {
+      "data": {
+        "to":   "router address (Faroswap)",
+        "data": "calldata, ready to send via cast",
+        "value": "msg.value in wei for native token swaps"
+      }
+    },
+    "_note": "API key required. Without it, agent must construct mixSwap params manually (only practical for direct PMM pools) — recommend fallback to direct token transfer + warning if no key available."
+  },
+  "frontendQuoteUrl": "https://faroswap.xyz/swap",
+  "supportedTokens": {
+    "PROS": "native",
+    "WPHRS": "0x838800b758277CC111B2d48Ab01e5E164f8E9471",
+    "USDC":  "0xc879c018db60520f4355c26ed1a6d572cdac1815",
+    "USDT":  "0xE7E84B8B4f39C507499c40B4ac199B050e2882d5",
+    "WETH":  "0x7d211F77525ea39A0592794f793cC1036eEaccD5"
+  },
+  "defaults": {
+    "slippageBps": 100,
+    "deadlineSeconds": 1800
+  }
+}

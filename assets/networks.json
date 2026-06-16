@@ -1,0 +1,72 @@
+{
+  "_comment": "Single source of truth for RPC URLs and chain IDs. Always load from this file via jq.",
+  "networks": {
+    "pharos": {
+      "chainId": 1672,
+      "name": "Pharos Pacific Mainnet",
+      "rpcUrl": "https://rpc.pharos.xyz",
+      "explorerUrl": "https://pharosscan.xyz",
+      "nativeToken": "PROS",
+      "cctpDomain": 31
+    },
+    "pharos-testnet": {
+      "chainId": 688689,
+      "name": "Pharos Atlantic Testnet",
+      "rpcUrl": "https://atlantic.dplabs-internal.com",
+      "explorerUrl": "https://atlantic.pharosscan.xyz",
+      "nativeToken": "PHRS",
+      "cctpDomain": null,
+      "_note": "CCTP V2 testnet support TBD; verify before testnet bridge tests"
+    },
+    "ethereum": {
+      "chainId": 1,
+      "name": "Ethereum Mainnet",
+      "rpcUrl": "https://ethereum-rpc.publicnode.com",
+      "explorerUrl": "https://etherscan.io",
+      "nativeToken": "ETH",
+      "cctpDomain": 0
+    },
+    "base": {
+      "chainId": 8453,
+      "name": "Base Mainnet",
+      "rpcUrl": "https://mainnet.base.org",
+      "explorerUrl": "https://basescan.org",
+      "nativeToken": "ETH",
+      "cctpDomain": 6
+    },
+    "arbitrum": {
+      "chainId": 42161,
+      "name": "Arbitrum One",
+      "rpcUrl": "https://arb1.arbitrum.io/rpc",
+      "explorerUrl": "https://arbiscan.io",
+      "nativeToken": "ETH",
+      "cctpDomain": 3
+    },
+    "optimism": {
+      "chainId": 10,
+      "name": "OP Mainnet",
+      "rpcUrl": "https://optimism-rpc.publicnode.com",
+      "explorerUrl": "https://optimistic.etherscan.io",
+      "nativeToken": "ETH",
+      "cctpDomain": 2
+    },
+    "polygon": {
+      "chainId": 137,
+      "name": "Polygon PoS",
+      "rpcUrl": "https://polygon-bor-rpc.publicnode.com",
+      "explorerUrl": "https://polygonscan.com",
+      "nativeToken": "POL",
+      "cctpDomain": 7
+    },
+    "avalanche": {
+      "chainId": 43114,
+      "name": "Avalanche C-Chain",
+      "rpcUrl": "https://api.avax.network/ext/bc/C/rpc",
+      "explorerUrl": "https://snowscan.xyz",
+      "nativeToken": "AVAX",
+      "cctpDomain": 1
+    }
+  },
+  "defaultSource": "pharos",
+  "defaultDestination": "base"
+}

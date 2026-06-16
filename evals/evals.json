@@ -1,0 +1,115 @@
+{
+  "_comment": "Manual evaluation scenarios for omnichain-usdc-router. No automated runner — grade by inspection. Each prompt should produce an action plan + commands that, if executed with real funds, would bridge/swap USDC correctly.",
+  "version": "0.1.0",
+  "evals": [
+    {
+      "id": "bridge-out-1",
+      "prompt": "bridge 1 USDC from pharos to base",
+      "expects": {
+        "action": "bridge",
+        "source": "pharos",
+        "destination": "base",
+        "amount_raw": "1000000",
+        "loads_reference": "references/02-cctp-bridge-out.md",
+        "calls_in_order": [
+          "cast call USDC.balanceOf (Pharos)",
+          "cast call USDC.allowance (Pharos)",
+          "cast send USDC.approve (Pharos, if allowance < amount)",
+          "cast send TokenMessenger.depositForBurn (Pharos, dest=domain 6)",
+          "curl iris-api.circle.com/v2/messages/31/{txhash}",
+          "cast send MessageTransmitter.receiveMessage (Base)"
+        ],
+        "asserts_addresses": {
+          "USDC_pharos": "0xc879c018db60520f4355c26ed1a6d572cdac1815",
+          "TokenMessenger_pharos": "0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d",
+          "MessageTransmitter_base": "0x81D40F21F12A8F0E3252Bccb954D722d4c464B64",
+          "USDC_base": "0x833589fCD6eDb6E08f4c7C32A07bb15d2176aB5f"
+        }
+      }
+    },
+    {
+      "id": "bridge-in-1",
+      "prompt": "bridge 5 USDC from base to pharos",
+      "expects": {
+        "action": "bridge",
+        "source": "base",
+        "destination": "pharos",
+        "loads_reference": "references/03-cctp-bridge-in.md",
+        "calls_in_order": [
+          "cast call USDC.balanceOf (Base)",
+          "cast send USDC.approve (Base, if needed)",
+          "cast send TokenMessenger.depositForBurn (Base, dest=domain 31)",
+          "curl iris-api.circle.com/v2/messages/6/{txhash}",
+          "cast send MessageTransmitter.receiveMessage (Pharos)"
+        ]
+      }
+    },
+    {
+      "id": "swap-1",
+      "prompt": "swap 0.5 PROS to USDC on pharos",
+      "expects": {
+        "action": "swap",
+        "source": "pharos",
+        "destination": "pharos",
+        "loads_reference": "references/04-faroswap-swap.md",
+        "preferred_path": "DODO Route API",
+        "fallback_if_no_api_key": "abort with guidance",
+        "asserts_addresses": {
+          "router": "0xA5cA5Fbe34e444F366B373170541ec6902b0F75c",
+          "USDC_pharos": "0xc879c018db60520f4355c26ed1a6d572cdac1815"
+        }
+      }
+    },
+    {
+      "id": "swap-2-reverse",
+      "prompt": "swap 100 USDC for PROS on pharos",
+      "expects": {
+        "action": "swap",
+        "loads_reference": "references/04-faroswap-swap.md",
+        "approve_first": true,
+        "approve_target": "0xA5cA5Fbe34e444F366B373170541ec6902b0F75c (router) OR API-returned 'to' address",
+        "preferred_path": "DODO Route API"
+      }
+    },
+    {
+      "id": "multi-hop-1",
+      "prompt": "convert 2 PROS to USDC on arbitrum",
+      "expects": {
+        "action": "convert",
+        "loads_reference": "references/06-multi-hop.md",
+        "plan": [
+          {"step": 1, "type": "S_SWAP_PHAROS", "in": "PROS", "out": "USDC"},
+          {"step": 2, "type": "S_BRIDGE_OUT", "to": "arbitrum"}
+        ],
+        "reads_swap_output_via": "balanceOf delta after swap",
+        "checkpoint_logs": ["CHECKPOINT step=1", "CHECKPOINT step=2"]
+      }
+    },
+    {
+      "id": "status-1",
+      "prompt": "check status of tx 0xabc123",
+      "expects": {
+        "action": "status",
+        "loads_reference": "references/07-status-and-recovery.md",
+        "calls_in_order": [
+          "cast receipt 0xabc123 on each chain in networks.json until found",
+          "parse logs for MessageSent topic 0x8c526166...",
+          "curl iris-api.circle.com/v2/messages/{src_domain}/0xabc123",
+          "decode destination domain from message bytes[8..11]",
+          "report: source chain, status, attestation readiness, target chain to mint on"
+        ],
+        "does_not_send_tx": true
+      }
+    }
+  ],
+  "manual_review_checklist": [
+    "Did the agent use the correct CCTP V2 signature (7-arg, not 4-arg V1)?",
+    "Did it set destinationCaller = 0x0 (permissionless mint)?",
+    "Did it set maxFee = 0 and minFinalityThreshold = 2000 (Standard Transfer)?",
+    "Did approve cap to exact AMOUNT_RAW (NOT MAX_UINT256)?",
+    "Did it poll Iris correctly (status='complete' check)?",
+    "Did it decode message bytes for destination domain on recovery?",
+    "Did it abort gracefully when DODO_API_KEY is missing?",
+    "Did it report a human-readable summary at the end?"
+  ]
+}
