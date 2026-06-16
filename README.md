@@ -59,16 +59,33 @@ This skill closes that gap by composing four existing primitives instead of rein
 
 ## Supported corridors
 
-| Source | Destination | Mechanism | Time | Fee |
-|---|---|---|---|---|
-| Pharos USDC | Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | **CCTP V2** | 8–15 min | **0** |
-| EVM major USDC | Pharos USDC | **CCTP V2** | 8–15 min | **0** |
-| **PROS on Pharos** | **USDC on Base / Arbitrum / etc.** | **LI.FI Intents** (atomic) | **~13 sec** | 0.1–0.3% |
-| USDC on EVM major | non-USDC on Pharos | LI.FI | seconds–20 min | 0.1–0.3% |
-| LINK / WETH / USDCe | cross-chain to/from Pharos | LI.FI (Polymer / Glacis / Intents) | varies | varies |
-| PROS ↔ USDC / USDT / WETH on Pharos | — (same chain) | **Faroswap mixSwap** | seconds | DEX |
+CCTP V2 (USDC ↔ USDC, zero fee, ~8–15 min) is bidirectional between Pharos and the 6 CCTP V2 mainnets:
 
-Pharos does **not** yet support CCTP Fast Transfer; Standard Transfer takes 8–15 min depending on source-chain finality. For users in a hurry, the agent can offer LI.FI's Polymer (~18 min, 0.25% fee) or LI.FI Intents (seconds, if a route exists).
+| USDC corridor | Mechanism | Time | Fee |
+|---|---|---|---|
+| Pharos USDC ↔ Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | **CCTP V2 Standard** | 8–15 min | **$0** |
+
+LI.FI covers cross-chain swaps and non-USDC bridges between Pharos and a **specific list of chain-token pairs** (manually verified — re-confirm at runtime via `/quote`):
+
+| Pharos ↔ \<chain\> | Counter-tokens supported (bidirectional) | Mechanism |
+|---|---|---|
+| Ethereum | USDC, WETH, ETH | LI.FI Polymer / Intents |
+| Polygon | USDC, USDT, ETH, POL | LI.FI Polymer / Intents |
+| Arbitrum | USD0, USDC, ETH | LI.FI Polymer / Intents |
+| **Base** ⭐ widest | USDT, USDT0, USDC, ETH | **LI.FI Intents** (atomic, ~13 sec) |
+| HyperEVM | USDT0, USDC, HYPE | LI.FI Polymer / Intents |
+| Ink | USDT0, USDC, WETH | LI.FI Polymer / Intents |
+| Optimism | USDC, USDT0, ETH | LI.FI Polymer / Intents |
+
+Faroswap handles same-chain swaps on Pharos via DODO `mixSwap`:
+
+| Same-chain Pharos swap | Mechanism | Time | Fee |
+|---|---|---|---|
+| PROS ↔ USDC / USDT / WETH (and other Pharos tokens) | **Faroswap mixSwap** | seconds | DEX fee |
+
+**Note:** LI.FI does **not** support every PROS pair on every chain. Avalanche, for example, has no LI.FI PROS route as of last check. The agent always re-verifies a corridor with `/quote` before execution — the matrix above is a fast hint, not a guarantee. The corresponding `assets/lifi.json` → `pharos_pros_supported_corridors` is the authoritative source for the agent.
+
+Pharos does **not** yet support CCTP Fast Transfer; Standard Transfer takes 8–15 min depending on source-chain finality. For users in a hurry on USDC pairs, LI.FI's Polymer route (~18 min, ~0.25%) or LI.FI Intents (seconds, where available) are the alternatives the agent quotes in parallel.
 
 ---
 

@@ -46,16 +46,33 @@ This skill does **not** implement its own contracts. It uses uniform CCTP V2 add
 
 ## Supported corridors
 
-| Source | Destination | Mechanism | Time | Fee |
-|---|---|---|---|---|
-| Pharos USDC | Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | **CCTP V2 Standard** | 8–15 min | 0 |
-| Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | Pharos USDC | **CCTP V2 Standard** | 8–15 min | 0 |
-| PROS ↔ USDC / USDT / WETH on Pharos | — | **Faroswap mixSwap** | seconds | DEX |
-| **PROS / LINK / WETH** on Pharos | **USDC / native** on any LI.FI-supported chain | **LI.FI Intents** (atomic swap+bridge) | ~13 sec to ~1 min | 0.1–0.3% |
-| Any token | Any token (70+ chains via LI.FI) | **LI.FI** (Polymer / Glacis / Intents) | seconds–20 min | 0–0.3% |
-| PROS on Pharos | USDC on any chain (manual mode) | Faroswap → CCTP, chained | 10–20 min | DEX + 0 |
+**CCTP V2** — USDC ↔ USDC, zero fee, bidirectional between Pharos and 6 mainnets:
 
-The agent picks the cheapest viable route automatically; see [references/10-route-selection.md](references/10-route-selection.md).
+| USDC corridor | Mechanism | Time | Fee |
+|---|---|---|---|
+| Pharos USDC ↔ Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | CCTP V2 Standard | 8–15 min | $0 |
+
+**LI.FI** — non-USDC bridges and cross-chain swaps. Coverage is **chain-token specific**, not "any token to any chain". Verified bidirectional pairs from Pharos:
+
+| Pharos ↔ \<chain\> | Counter-tokens (bidirectional) |
+|---|---|
+| Ethereum | USDC, WETH, ETH |
+| Polygon | USDC, USDT, ETH, POL |
+| Arbitrum | USD0, USDC, ETH |
+| **Base** ⭐ widest coverage | USDT, USDT0, USDC, ETH |
+| HyperEVM | USDT0, USDC, HYPE |
+| Ink | USDT0, USDC, WETH |
+| Optimism | USDC, USDT0, ETH |
+
+Avalanche has **no** LI.FI PROS route at this time. Other pairs not listed should be re-verified with `/quote` before assumption.
+
+**Faroswap** — same-chain swaps on Pharos via DODO `mixSwap`:
+
+| Same-chain swap | Mechanism | Time |
+|---|---|---|
+| PROS ↔ USDC / USDT / WETH (and other Pharos tokens) | Faroswap mixSwap | seconds |
+
+The agent quotes all applicable providers in parallel and ranks by speed, fee, and output. See [references/10-route-selection.md](references/10-route-selection.md) for the decision logic. The matrix above is the **starting hint** — the source of truth at runtime is `assets/lifi.json` → `pharos_pros_supported_corridors` + a live `/quote` call.
 
 ## Capability Index
 
