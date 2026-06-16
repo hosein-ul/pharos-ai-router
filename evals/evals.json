@@ -1,6 +1,6 @@
 {
   "_comment": "Manual evaluation scenarios for omnichain-usdc-router. No automated runner — grade by inspection. Each prompt should produce an action plan + commands that, if executed with real funds, would bridge/swap USDC correctly.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "evals": [
     {
       "id": "bridge-out-1",
@@ -100,6 +100,60 @@
         ],
         "does_not_send_tx": true
       }
+    },
+    {
+      "id": "lifi-intents-1",
+      "prompt": "convert 5 PROS on pharos to USDC on base",
+      "expects": {
+        "action": "convert",
+        "preferred_route": "LI.FI Intents",
+        "loads_reference": "references/09-lifi-bridge.md",
+        "calls_in_order": [
+          "GET https://li.quest/v1/quote?fromChain=1672&toChain=8453&fromToken=PROS&toToken=USDC&fromAmount=5000000000000000000&fromAddress=<sender>",
+          "verify tool=lifiIntents in response",
+          "(if ERC-20, approve to transactionRequest.to with exact amount)",
+          "cast send transactionRequest.to transactionRequest.data --value transactionRequest.value",
+          "GET https://li.quest/v1/status?txHash=<tx>&bridge=lifiIntents&fromChain=1672&toChain=8453",
+          "poll until status=DONE substatus=COMPLETED"
+        ],
+        "asserts": {
+          "no_cctp_calls": true,
+          "atomic_single_tx_on_source": true,
+          "report_includes_dest_tx_hash": true,
+          "expected_exec_seconds_under": 90
+        }
+      }
+    },
+    {
+      "id": "lifi-bridge-non-usdc",
+      "prompt": "bridge 1 LINK from pharos to arbitrum",
+      "expects": {
+        "action": "bridge",
+        "token_in": "LINK",
+        "token_out": "LINK",
+        "preferred_route": "LI.FI (CCTP only carries USDC)",
+        "loads_reference": "references/09-lifi-bridge.md",
+        "calls_in_order": [
+          "GET /quote with fromToken=LINK toToken=LINK",
+          "approve LINK -> transactionRequest.to",
+          "cast send",
+          "poll /status"
+        ]
+      }
+    },
+    {
+      "id": "route-compare",
+      "prompt": "what's the cheapest way to move 100 USDC from pharos to base",
+      "expects": {
+        "action": "quote",
+        "loads_reference": "references/10-route-selection.md",
+        "presents_two_routes": [
+          "CCTP V2 Standard (fee $0.00, ~8-15 min)",
+          "LI.FI Polymer / Glacis (fee ~0.25%, ~18 min)"
+        ],
+        "recommends": "CCTP V2 (cheaper)",
+        "does_not_send_tx": true
+      }
     }
   ],
   "manual_review_checklist": [
@@ -110,6 +164,10 @@
     "Did it poll Iris correctly (status='complete' check)?",
     "Did it decode message bytes for destination domain on recovery?",
     "Did it abort gracefully when DODO_API_KEY is missing?",
+    "For USDC->USDC pairs involving Pharos, did it pick CCTP V2 (not LI.FI)?",
+    "For PROS->USDC cross-chain, did it pick LI.FI Intents (not manual multi-hop)?",
+    "Did the LI.FI quote use token symbols (USDC/PROS), not addresses, to avoid token-not-found errors?",
+    "Did it parse status/substatus correctly (DONE+COMPLETED vs DONE+PARTIAL vs DONE+REFUNDED)?",
     "Did it report a human-readable summary at the end?"
   ]
 }

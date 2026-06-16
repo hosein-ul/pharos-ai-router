@@ -1,11 +1,14 @@
 # omnichain-usdc-router
 
-**Conversational cross-chain USDC routing for AI agents on the Pharos Network ecosystem.**
+**Conversational cross-chain routing for AI agents on the Pharos Network ecosystem.**
 
-Tell your agent in plain language. It bridges native Circle USDC between Pharos and 6 EVM majors via CCTP V2, swaps tokens on Pharos via Faroswap, and chains the two for multi-hop intents — with status polling, stuck-bridge recovery, and optional risk gating through `pharos-tx-guardrail`.
+Tell your agent in plain language. It bridges native Circle USDC between Pharos and 6 EVM majors via CCTP V2, swaps tokens on Pharos via Faroswap, and uses LI.FI for non-USDC bridges and atomic cross-chain swaps (e.g. **5 PROS on Pharos → USDC on Base in ~13 seconds** via LI.FI Intents).
+
+The agent picks the cheapest route automatically: CCTP V2 for USDC pairs (zero fee), LI.FI for everything else, Faroswap for on-Pharos swaps.
 
 [![Pharos Network](https://img.shields.io/badge/Pharos-Mainnet%201672-6B4FFF?style=flat-square)](https://pharos.xyz)
 [![CCTP V2](https://img.shields.io/badge/Circle-CCTP%20V2%20Domain%2031-00C2A8?style=flat-square)](https://developers.circle.com/cctp/cctp-supported-blockchains)
+[![LI.FI](https://img.shields.io/badge/LI.FI-Pharos%20(phr)-FFB800?style=flat-square)](https://li.quest/v1/chains)
 [![Hackathon](https://img.shields.io/badge/AI%20Agent%20Carnival-Phase%201-FF6B35?style=flat-square)](https://dorahacks.io/hackathon/pharos-phase1/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
@@ -43,26 +46,29 @@ Other intents the agent handles:
 
 Two earlier skills in this set — [`pharos-tx-guardrail`](https://github.com/hosein-ul/pharos-tx-guardrail) and [`pharos-rwa-yield-router`](https://github.com/hosein-ul/pharos-rwa-yield-router) — are **read-only or local-only**. They don't give an agent the power to **move value across chains**, which is the heart of agentic-economy use cases (A2A payments, treasury management, cross-chain yield).
 
-This skill closes that gap by composing three existing primitives instead of reinventing anything:
+This skill closes that gap by composing four existing primitives instead of reinventing anything:
 
 | Primitive | Role | Verified |
 |---|---|---|
-| **Circle CCTP V2** | Native USDC burn-and-mint across chains | ✅ Pharos = domain 31, `0x28b5a0e9...` deployed |
-| **Faroswap** (DODO PMM fork) | On-chain swaps on Pharos | ✅ Router `0xA5cA5Fbe...`, `mixSwap` selector confirmed |
+| **Circle CCTP V2** | Native USDC burn-and-mint across chains, zero fee | ✅ Pharos = domain 31, `0x28b5a0e9...` deployed |
+| **LI.FI** | Universal cross-chain router for non-USDC and cross-chain swaps | ✅ Pharos = chain key `phr`, Diamond `0xFf70F4A1...` deployed, 6 tokens routed |
+| **Faroswap** (DODO PMM fork) | On-Pharos same-chain swaps | ✅ Router `0xA5cA5Fbe...`, `mixSwap` selector confirmed |
 | **Pharos's native Circle USDC** | The asset itself | ✅ `0xc879c018...`, `masterMinter()` confirms Circle FiatTokenProxy |
 
 ---
 
 ## Supported corridors
 
-| Source | Destination | Mechanism |
-|---|---|---|
-| Pharos USDC | Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | CCTP V2 Standard Transfer (0 fee) |
-| Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | Pharos USDC | CCTP V2 Standard Transfer |
-| PROS ↔ USDC / USDT / WETH on Pharos | — | Faroswap mixSwap |
-| PROS on Pharos | USDC on any supported chain | Swap → Bridge, chained |
+| Source | Destination | Mechanism | Time | Fee |
+|---|---|---|---|---|
+| Pharos USDC | Ethereum / Base / Arbitrum / Optimism / Polygon / Avalanche USDC | **CCTP V2** | 8–15 min | **0** |
+| EVM major USDC | Pharos USDC | **CCTP V2** | 8–15 min | **0** |
+| **PROS on Pharos** | **USDC on Base / Arbitrum / etc.** | **LI.FI Intents** (atomic) | **~13 sec** | 0.1–0.3% |
+| USDC on EVM major | non-USDC on Pharos | LI.FI | seconds–20 min | 0.1–0.3% |
+| LINK / WETH / USDCe | cross-chain to/from Pharos | LI.FI (Polymer / Glacis / Intents) | varies | varies |
+| PROS ↔ USDC / USDT / WETH on Pharos | — (same chain) | **Faroswap mixSwap** | seconds | DEX |
 
-Pharos does **not** yet support CCTP Fast Transfer; Standard Transfer takes 8–15 min depending on source-chain finality. When Circle enables Fast Transfer on Pharos, only `assets/cctp-domains.json` needs updating.
+Pharos does **not** yet support CCTP Fast Transfer; Standard Transfer takes 8–15 min depending on source-chain finality. For users in a hurry, the agent can offer LI.FI's Polymer (~18 min, 0.25% fee) or LI.FI Intents (seconds, if a route exists).
 
 ---
 
@@ -104,6 +110,7 @@ curl --version
 |---|---|---|
 | `AGENT_PRIVATE_KEY` | ✅ yes | signing key for `cast send`; never logged |
 | `DODO_API_KEY` | optional | Faroswap route quotes via DODO API; without it, swap falls back to wrap/unwrap only |
+| `LIFI_API_KEY` | optional | raises LI.FI rate limit from 200 req / 2 hours to 200 req / minute |
 
 ---
 
@@ -149,6 +156,26 @@ cast send $MT_BASE "receiveMessage(bytes,bytes)" $MSG $ATT \
 
 Full templates in [`references/02-cctp-bridge-out.md`](references/02-cctp-bridge-out.md).
 
+### Cross-chain swap: 5 PROS on Pharos → USDC on Base (LI.FI Intents, ~13 sec)
+
+```bash
+SENDER=$(cast wallet address $AGENT_PRIVATE_KEY)
+
+QUOTE=$(curl -s "https://li.quest/v1/quote?fromChain=1672&toChain=8453&fromToken=PROS&toToken=USDC&fromAmount=5000000000000000000&fromAddress=$SENDER")
+
+TO=$(echo $QUOTE   | python -c "import sys,json; print(json.load(sys.stdin)['transactionRequest']['to'])")
+DATA=$(echo $QUOTE | python -c "import sys,json; print(json.load(sys.stdin)['transactionRequest']['data'])")
+VAL=$(echo $QUOTE  | python -c "import sys,json; print(json.load(sys.stdin)['transactionRequest'].get('value','0'))")
+
+cast send $TO $DATA --value $VAL \
+  --rpc-url https://rpc.pharos.xyz --private-key $AGENT_PRIVATE_KEY
+
+# Poll LI.FI status (settles in ~13 sec for Intents)
+curl "https://li.quest/v1/status?txHash=$TX&bridge=lifiIntents&fromChain=1672&toChain=8453"
+```
+
+Full template in [`references/09-lifi-bridge.md`](references/09-lifi-bridge.md).
+
 ### Swap 0.5 PROS to USDC on Pharos
 
 ```bash
@@ -183,18 +210,21 @@ omnichain-usdc-router/
 │   ├── networks.json                 ← 7 chains: RPC + chain ID + explorer
 │   ├── tokens.json                   ← USDC addresses (Circle-verified) + native + wrapped
 │   ├── cctp-domains.json             ← CCTP V2 domain IDs + uniform CREATE2 addresses
-│   └── faroswap.json                 ← Router + DODO Route API config
+│   ├── faroswap.json                 ← Router + DODO Route API config
+│   └── lifi.json                     ← LI.FI endpoints + Pharos tokens + bridges
 ├── references/
 │   ├── 01-intent-routing.md          ← intent parser + decision tree + balance discovery
 │   ├── 02-cctp-bridge-out.md         ← Pharos → other chain, end-to-end
 │   ├── 03-cctp-bridge-in.md          ← other chain → Pharos, end-to-end
 │   ├── 04-faroswap-swap.md           ← Pharos-internal swap (API + fallback)
 │   ├── 05-attestation-poll.md        ← Iris polling logic
-│   ├── 06-multi-hop.md               ← chained swap+bridge
+│   ├── 06-multi-hop.md               ← chained swap+bridge (manual)
 │   ├── 07-status-and-recovery.md     ← resume from tx hash, decode message, retry mint
-│   └── 08-safety-integration.md      ← optional pipe through pharos-tx-guardrail
+│   ├── 08-safety-integration.md      ← optional pipe through pharos-tx-guardrail
+│   ├── 09-lifi-bridge.md             ← LI.FI quote / sign / status / Intents / recovery
+│   └── 10-route-selection.md         ← CCTP vs LI.FI decision rules + comparison
 └── evals/
-    └── evals.json                    ← 6 manual eval scenarios
+    └── evals.json                    ← 8 manual eval scenarios
 ```
 
 ---
@@ -227,6 +257,24 @@ Verified on-chain via `eth_getCode` on: Pharos, Ethereum, Base, Avalanche, Polyg
 | Contract | Address | Note |
 |---|---|---|
 | Router | `0xA5cA5Fbe34e444F366B373170541ec6902b0F75c` | `mixSwap` selector `0x0a5ea466` confirmed |
+
+### LI.FI (Pharos mainnet)
+
+| Contract | Address | Note |
+|---|---|---|
+| LI.FI Diamond | `0xFf70F4A1d11995621854F3692acF286d8aCd04b2` | proxy; quote `transactionRequest.to` points here |
+
+LI.FI bridge providers on Pharos: `glacis`, `gasZipBridge`, `polymer`, `polymerStandard`, `lifiIntents`. Same-chain exchanges: `fly`, `lifiIntentsDex`.
+
+LI.FI tokens on Pharos (live from `GET https://li.quest/v1/tokens?chains=1672`):
+| Symbol | Address | Decimals |
+|---|---|---|
+| PROS (native) | `0x0000000000000000000000000000000000000000` | 18 |
+| USDC | `0xC879C018dB60520F4355C26eD1a6D572cdAC1815` | 6 |
+| USDCe | `0x7126C3FeF4e6a680eeE09Fb039B2236F638384B0` | 6 |
+| LINK | `0x51e2A24742Db77604B881d6781Ee16B5b8fcBE29` | 18 |
+| WETH | `0x1f4b7011Ee3d53969bb67F59428a9ec0477856E9` | 18 |
+| WPROS | `0x52C48d4213107b20bC583832b0d951FB9CA8F0B0` | 18 |
 
 ### CCTP Domain IDs
 
@@ -282,9 +330,11 @@ human intent → omnichain-usdc-router routes funds → pharos-tx-guardrail gate
 
 ## Versioning
 
-`0.1.0` — V1 scope: USDC-only via CCTP V2 + Faroswap swap on Pharos + multi-hop intents + recovery.
+`0.2.0` — adds **LI.FI integration**: non-USDC bridges, atomic cross-chain swaps via LI.FI Intents (PROS → USDC on Base in ~13 sec), automatic CCTP-vs-LI.FI route selection per intent.
 
-V2 candidates: Relay.link integration for non-CCTP corridors · USDT/WETH bridging via LayerZero · Fast Transfer when Circle enables on Pharos · ERC-4337 gasless flows.
+`0.1.0` — USDC-only via CCTP V2 + Faroswap swap on Pharos + manual multi-hop + recovery.
+
+Future: Fast Transfer when Circle enables on Pharos · USDT cross-chain via LayerZero · ERC-4337 gasless flows · LI.FI MCP server integration.
 
 ## License
 

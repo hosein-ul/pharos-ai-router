@@ -1,0 +1,76 @@
+{
+  "_comment": "LI.FI Diamond is the universal cross-chain routing layer on Pharos. Use it for (a) non-USDC tokens, (b) cross-chain swaps (e.g. PROS->USDC@Base) atomically via LI.FI Intents in seconds, (c) routes CCTP doesn't cover. For plain USDC<->USDC bridges, prefer CCTP V2 in cctp-domains.json (zero fee).",
+  "api": {
+    "baseUrl": "https://li.quest/v1",
+    "stagingUrl": "https://staging.li.quest/v1",
+    "endpoints": {
+      "chains":  "GET /chains",
+      "tokens":  "GET /tokens?chains={chainId}",
+      "tools":   "GET /tools?chains={chainId}",
+      "quote":   "GET /quote?fromChain=&toChain=&fromToken=&toToken=&fromAmount=&fromAddress=&slippage=",
+      "routes":  "POST /advanced/routes",
+      "status":  "GET /status?txHash=&bridge=&fromChain=&toChain="
+    },
+    "auth": {
+      "required": false,
+      "header": "x-lifi-api-key",
+      "free_tier": "200 requests / 2 hours per IP",
+      "with_key": "200 requests / minute"
+    },
+    "_doc_urls": {
+      "main": "https://docs.li.fi/",
+      "agents": "https://docs.li.fi/agents/overview",
+      "five_call_recipe": "https://docs.li.fi/agents/quick-start/five-call-recipe",
+      "mcp_server": "https://mcp.li.quest/mcp",
+      "openapi": "https://docs.li.fi/openapi.yaml"
+    }
+  },
+  "diamond": {
+    "pharos": {
+      "address": "0xFf70F4A1d11995621854F3692acF286d8aCd04b2",
+      "verified": true,
+      "_note": "LI.FI Diamond proxy. Quote responses' transactionRequest.to points here."
+    }
+  },
+  "pharos_token_registry": {
+    "_comment": "Tokens LI.FI knows about on Pharos chain 1672. Use SYMBOL in /quote (LI.FI resolves to address). Address overlaps with Circle USDC for USDC; others are LI.FI-specific bridged variants.",
+    "PROS":  { "address": "0x0000000000000000000000000000000000000000", "decimals": 18, "_role": "native gas token" },
+    "USDC":  { "address": "0xC879C018dB60520F4355C26eD1a6D572cdAC1815", "decimals": 6, "_role": "Circle native USDC (CCTP-bridged)" },
+    "USDCe": { "address": "0x7126C3FeF4e6a680eeE09Fb039B2236F638384B0", "decimals": 6, "_role": "USDC.e bridged via LI.FI ecosystem" },
+    "LINK":  { "address": "0x51e2A24742Db77604B881d6781Ee16B5b8fcBE29", "decimals": 18 },
+    "WETH":  { "address": "0x1f4b7011Ee3d53969bb67F59428a9ec0477856E9", "decimals": 18, "_note": "LI.FI's WETH on Pharos, distinct from the tokens.json WETH" },
+    "WPROS": { "address": "0x52C48d4213107b20bC583832b0d951FB9CA8F0B0", "decimals": 18, "_note": "LI.FI's WPROS, distinct from WPHRS in tokens.json" }
+  },
+  "bridges_on_pharos": {
+    "_comment": "Bridge providers LI.FI orchestrates from/to Pharos. CCTP V2 is NOT among these — LI.FI uses generic message-passing protocols. Use this list to set 'allowBridges' / 'denyBridges' params on /quote if you want to force a route.",
+    "providers": ["glacis", "gasZipBridge", "polymer", "polymerStandard", "lifiIntents"]
+  },
+  "exchanges_on_pharos": {
+    "_comment": "Same-chain DEX aggregators LI.FI can route through on Pharos.",
+    "providers": ["fly", "lifiIntentsDex"]
+  },
+  "status_values": {
+    "NOT_FOUND": "tx not yet detected by LI.FI indexer",
+    "PENDING":   "in progress",
+    "DONE": {
+      "COMPLETED": "success, exact tokens received",
+      "PARTIAL":   "success but received different token (refunded mid-flight)",
+      "REFUNDED":  "failed, funds returned to source"
+    },
+    "FAILED":    "transaction failed, may need user action"
+  },
+  "polling": {
+    "interval_seconds_min": 10,
+    "interval_seconds_max": 30,
+    "max_wait_minutes": 30,
+    "_note": "LI.FI Intents typically settle in <60 sec. Polymer Standard ~18 min. Use executionDuration from quote as expected time."
+  },
+  "preferred_route_policy": {
+    "_comment": "Decision policy for picking between CCTP and LI.FI. Used by references/10-route-selection.md.",
+    "USDC_to_USDC": "CCTP V2 (zero fee)",
+    "non_USDC_cross_chain": "LI.FI",
+    "cross_chain_swap": "LI.FI Intents (atomic, seconds)",
+    "PROS_anywhere": "LI.FI",
+    "stuck_USDC_USDC_fallback": "LI.FI if CCTP attestation hangs > 20 min"
+  }
+}
