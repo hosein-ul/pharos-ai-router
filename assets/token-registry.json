@@ -1,0 +1,81 @@
+{
+  "_comment": "Canonical token addresses per chain. The skill MUST resolve user-provided symbols to these checksummed addresses BEFORE calling any external API. After receiving a LI.FI / DODO quote, the skill MUST verify the returned token addresses match the expected ones — if not, ABORT (possible scam token mapping).",
+  "_security_rule": "Never trust symbol resolution by a third-party API. Always pass addresses. Always verify the response uses the same addresses you sent.",
+  "native": "0x0000000000000000000000000000000000000000",
+  "tokens": {
+    "USDC": {
+      "_source": "Circle official deployments (FiatTokenProxy with masterMinter)",
+      "1":      "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+      "10":     "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85",
+      "137":    "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+      "8453":   "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "42161":  "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+      "43114":  "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
+      "1672":   "0xc879c018db60520f4355c26ed1a6d572cdac1815",
+      "688689": "0xE0BE08c77f415F577A1B3A9aD7a1Df1479564ec8",
+      "_decimals": 6
+    },
+    "USDT": {
+      "_source": "Tether official",
+      "1":     "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+      "10":    "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58",
+      "137":   "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+      "42161": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+      "43114": "0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7",
+      "1672":  "0xE7E84B8B4f39C507499c40B4ac199B050e2882d5",
+      "_decimals": 6
+    },
+    "USDT0": {
+      "_source": "LayerZero OFT USDT0 — verify each address against the official deployment page at https://docs.lzo.app before mainnet use",
+      "_note": "Addresses change over time as new chains adopt USDT0. Use LI.FI /tokens?chains=N to confirm at runtime.",
+      "_decimals": 6
+    },
+    "USD0": {
+      "_source": "Usual Protocol USD0 stablecoin",
+      "1":     "0x73A15FeD60Bf67631dC6cd7Bc5B6e8da8190aCF5",
+      "42161": "0x35f1C5cB7Fb977E669fD244C567Da99d8a3a6850",
+      "_decimals": 18
+    },
+    "WETH": {
+      "_source": "Canonical wrapped ETH",
+      "1":     "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      "10":    "0x4200000000000000000000000000000000000006",
+      "137":   "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+      "8453":  "0x4200000000000000000000000000000000000006",
+      "42161": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+      "43114": "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB",
+      "1672":  "0x1f4b7011Ee3d53969bb67F59428a9ec0477856E9",
+      "_note_pharos": "LI.FI registers WETH at 0x1f4b7011... on Pharos. The legacy WETH at 0x7d211F77... is unused.",
+      "_decimals": 18
+    },
+    "WPROS": {
+      "_source": "LI.FI registry for Pharos native wrapper",
+      "1672": "0x52C48d4213107b20bC583832b0d951FB9CA8F0B0",
+      "_decimals": 18
+    },
+    "WPHRS": {
+      "_source": "Pharos Atlantic testnet wrapped PHRS",
+      "688689": "0x838800b758277CC111B2d48Ab01e5E164f8E9471",
+      "_decimals": 18
+    },
+    "LINK": {
+      "_source": "Chainlink LINK token",
+      "1":     "0x514910771AF9Ca656af840dff83E8264EcF986CA",
+      "8453":  "0x88Fb150BDc53A65fe94Dea0c9BA0a6dAf8C6e196",
+      "42161": "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
+      "1672":  "0x51e2A24742Db77604B881d6781Ee16B5b8fcBE29",
+      "_decimals": 18
+    },
+    "USDCe": {
+      "_source": "LI.FI Pharos bridged USDC.e",
+      "1672": "0x7126C3FeF4e6a680eeE09Fb039B2236F638384B0",
+      "_decimals": 6
+    },
+    "PROS":  { "_source": "Pharos native token", "1672": "0x0000000000000000000000000000000000000000", "_decimals": 18 },
+    "PHRS":  { "_source": "Pharos testnet native", "688689": "0x0000000000000000000000000000000000000000", "_decimals": 18 },
+    "ETH":   { "_source": "native ETH",  "1": "0x0000000000000000000000000000000000000000", "10": "0x0000000000000000000000000000000000000000", "8453": "0x0000000000000000000000000000000000000000", "42161": "0x0000000000000000000000000000000000000000", "_decimals": 18 },
+    "POL":   { "_source": "native MATIC / POL on Polygon", "137": "0x0000000000000000000000000000000000000000", "_decimals": 18 },
+    "AVAX":  { "_source": "native AVAX",  "43114": "0x0000000000000000000000000000000000000000", "_decimals": 18 },
+    "HYPE":  { "_source": "HyperEVM native token. Look up address via LI.FI /tokens at runtime if needed.", "_decimals": 18 }
+  }
+}

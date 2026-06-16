@@ -11,7 +11,7 @@ description: >
   route automatically: CCTP V2 for USDC pairs (zero fee), LI.FI for everything
   else. Read-only on the safe path: every cast send is preceded by a
   balance / allowance / policy check.
-version: 0.3.0
+version: 0.4.0
 requires:
   anyBins:
     - cast
@@ -171,7 +171,9 @@ omnichain-usdc-router/
 │   ├── 08-safety-integration.md
 │   ├── 09-lifi-bridge.md       ← LI.FI quote / sign / status, with Intents and Polymer examples
 │   ├── 10-route-selection.md   ← LI.FI-first workflow + parallel quote + ranking + presentation
-│   └── 11-route-discovery.md   ← Live discovery: chains, tokens, tools, corridor probes
+│   ├── 11-route-discovery.md   ← Live discovery: chains, tokens, tools, corridor probes
+│   ├── 12-token-resolution.md  ← Anti-scam: symbol→address resolution + post-quote verification
+│   └── 13-wallet-and-security.md ← Agent wallet model, env var, sweep policy, pre-flight
 └── evals/
     └── evals.json
 ```
@@ -182,6 +184,8 @@ omnichain-usdc-router/
 - [pharos-rwa-yield-router](https://github.com/hosein-ul/pharos-rwa-yield-router) — read live APY, compose post-bridge deposit intents
 
 ## Versioning
+
+`0.4.0` — **Hardened for mainnet**: adds canonical `assets/token-registry.json` (chain×symbol → checksummed address). `rank-routes.sh` now resolves user symbols to addresses locally, then verifies the LI.FI / DODO response uses the same addresses it sent (aborts on mismatch). Adds [12-token-resolution.md](references/12-token-resolution.md) (anti-scam pattern) and [13-wallet-and-security.md](references/13-wallet-and-security.md) (agent wallet model). Audit caught and corrected a wrong Base USDC address propagated from prior assets — the new flow would have caught it at quote time.
 
 `0.3.0` — **LI.FI-first routing**: LI.FI is now the universal default; CCTP V2 and Faroswap are quoted in parallel only when the intent type matches (USDC↔USDC, same-chain Pharos). All quotes are ranked by (speed, fee, output) and presented to the user with the recommendation marked. Adds [11-route-discovery.md](references/11-route-discovery.md) for live discovery queries. Adds verified PROS-from-Pharos corridor matrix to `assets/lifi.json`.
 
