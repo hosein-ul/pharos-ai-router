@@ -24,9 +24,10 @@ AMOUNT_HUMAN="${5:?amount, e.g. 10 or 0.5}"
 
 # Resolve assets relative to skill root, regardless of cwd
 SKILL_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-NETS="$SKILL_ROOT/assets/networks.json"
-TOKS="$SKILL_ROOT/assets/tokens.json"
-CCTP="$SKILL_ROOT/assets/cctp-domains.json"
+cd "$SKILL_ROOT"
+NETS="assets/networks.json"
+TOKS="assets/tokens.json"
+CCTP="assets/cctp-domains.json"
 
 # Sender — defaults to placeholder for quote-only mode
 SENDER="${SENDER:-0x0000000000000000000000000000000000000001}"
@@ -54,10 +55,10 @@ AMOUNT_RAW=$(python -c "print(int(float('$AMOUNT_HUMAN') * 10**$DEC))")
 echo "=== Quoting routes for $AMOUNT_HUMAN $TIN ($SRC) -> $TOUT ($DST) ==="
 echo
 
-# Collect quotes into a JSON array, then rank at the end
-TMPDIR=$(mktemp -d)
-QUOTES_JSON="$TMPDIR/quotes.json"
+# Collect quotes into a JSON array in cwd (Windows-native Python can't read /tmp paths)
+QUOTES_JSON=".rank-routes-quotes.json"
 echo "[]" > "$QUOTES_JSON"
+trap 'rm -f "$QUOTES_JSON"' EXIT
 
 push_quote() {
   local NAME="$1" EXEC="$2" FEE_USD="$3" OUT_RAW="$4" OUT_DEC="$5" NOTE="$6"
@@ -147,9 +148,8 @@ if not quotes:
 ranked = sorted(quotes, key=lambda q: (q['exec_sec'], q['fee_usd'], -q['out_raw']))
 for i, q in enumerate(ranked, 1):
     out_h = q['out_raw'] / (10 ** q['out_dec'])
-    star = '  ★ recommended' if i == 1 else ''
+    star = '  <-- recommended' if i == 1 else ''
     print(f"  {i}. {q['name']:30} exec {q['exec_sec']/60:6.1f} min   fee \${q['fee_usd']:.4f}   receive {out_h:.4f} $TOUT{star}")
     print(f"     {q['note']}")
 EOF
 
-rm -rf "$TMPDIR"
