@@ -66,11 +66,28 @@
     "_note": "LI.FI Intents typically settle in <60 sec. Polymer Standard ~18 min. Use executionDuration from quote as expected time."
   },
   "preferred_route_policy": {
-    "_comment": "Decision policy for picking between CCTP and LI.FI. Used by references/10-route-selection.md.",
-    "USDC_to_USDC": "CCTP V2 (zero fee)",
-    "non_USDC_cross_chain": "LI.FI",
-    "cross_chain_swap": "LI.FI Intents (atomic, seconds)",
-    "PROS_anywhere": "LI.FI",
-    "stuck_USDC_USDC_fallback": "LI.FI if CCTP attestation hangs > 20 min"
+    "_comment": "Decision policy (v0.3.0 — LI.FI-first). The agent ALWAYS queries LI.FI first, then optionally quotes CCTP or Faroswap as alternatives when the intent type allows it. Best route is picked at runtime by ranking on (speed, fee, output).",
+    "default": "LI.FI /quote",
+    "specialized_alternatives": {
+      "USDC_to_USDC_with_pharos": "ALSO quote CCTP V2 (often zero fee but 8-15 min — compare vs LI.FI Polymer ~18 min, 0.25%)",
+      "same_chain_pharos_swap":   "ALSO quote Faroswap (DODO Route API or direct mixSwap)"
+    },
+    "ranking_priority": ["executionDuration", "totalFeeUSD", "toAmountMin"],
+    "stuck_route_fallback": "If LI.FI returns no route, try CCTP V2 (USDC pairs) or report unsupported corridor"
+  },
+  "pharos_pros_supported_corridors": {
+    "_comment": "Manually verified 2026-06-16 — PROS bidirectional with LI.FI on Pharos. NOT exhaustive — always re-verify via live /quote. Use as a fast hint for the agent when discussing 'what can I do with my PROS'.",
+    "_method": "Confirmed via LI.FI /quote returning a valid transactionRequest in both directions.",
+    "PROS_corridors": {
+      "ethereum":  ["USDC", "WETH", "ETH"],
+      "polygon":   ["USDC", "USDT", "ETH", "POL"],
+      "arbitrum":  ["USD0", "USDC", "ETH"],
+      "base":      ["USDT", "USDT0", "USDC", "ETH"],
+      "hyperevm":  ["USDT0", "USDC", "HYPE"],
+      "ink":       ["USDT0", "USDC", "WETH"],
+      "optimism":  ["USDC", "USDT0", "ETH"]
+    },
+    "_widest_coverage_chain": "base",
+    "_unsupported_chains_for_PROS": ["avalanche (no LI.FI PROS route as of 2026-06-16)"]
   }
 }

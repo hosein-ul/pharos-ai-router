@@ -328,11 +328,40 @@ human intent → omnichain-usdc-router routes funds → pharos-tx-guardrail gate
 
 [Pharos AI Agent Carnival — Phase 1](https://dorahacks.io/hackathon/pharos-phase1/)
 
+## Routing model (v0.3.0)
+
+**LI.FI-first.** Every intent always starts with a LI.FI `/quote`. CCTP V2 and Faroswap are quoted **in parallel** only when the intent type matches (USDC↔USDC with Pharos, or same-chain Pharos swap). All quotes are then ranked by `(executionDuration, fee, output)` and presented to the user with the recommendation marked. The user picks one — they always see the runners-up.
+
+Why this order:
+- **CCTP V2 only carries USDC** (Circle protocol). So it can only ever win USDC↔USDC corridors. It often does win them — zero protocol fee — but only there.
+- **LI.FI** routes any token across 70+ chains, including atomic cross-chain swaps (PROS on Pharos → USDC on Base in ~13 sec via Intents).
+- **Faroswap** is only useful for same-chain Pharos swaps.
+
+Try it: `bash scripts/rank-routes.sh pharos base USDC USDC 10` returns the live ranked list.
+
+Decision logic and presentation contract live in [`references/10-route-selection.md`](references/10-route-selection.md). Live discovery (chains, tokens, corridor probes) lives in [`references/11-route-discovery.md`](references/11-route-discovery.md).
+
+### Verified PROS-from-Pharos corridors (LI.FI, bidirectional)
+
+| Destination chain | Counter-tokens |
+|---|---|
+| Ethereum | USDC, WETH, ETH |
+| Polygon | USDC, USDT, ETH, POL |
+| Arbitrum | USD0, USDC, ETH |
+| **Base** ⭐ | USDT, USDT0, USDC, ETH (widest coverage) |
+| HyperEVM | USDT0, USDC, HYPE |
+| Ink | USDT0, USDC, WETH |
+| Optimism | USDC, USDT0, ETH |
+
+`assets/lifi.json` carries this list. Always re-verify a specific corridor with `/quote` before execution — LI.FI's routing graph updates continuously.
+
 ## Versioning
 
-`0.2.0` — adds **LI.FI integration**: non-USDC bridges, atomic cross-chain swaps via LI.FI Intents (PROS → USDC on Base in ~13 sec), automatic CCTP-vs-LI.FI route selection per intent.
+`0.3.0` — **LI.FI-first routing** with parallel quoting and explicit ranking. Adds [11-route-discovery.md](references/11-route-discovery.md). Adds `scripts/rank-routes.sh` runtime helper.
 
-`0.1.0` — USDC-only via CCTP V2 + Faroswap swap on Pharos + manual multi-hop + recovery.
+`0.2.0` — added LI.FI integration: non-USDC bridges, atomic cross-chain swaps via Intents.
+
+`0.1.0` — CCTP V2 + Faroswap + manual multi-hop. USDC only.
 
 Future: Fast Transfer when Circle enables on Pharos · USDT cross-chain via LayerZero · ERC-4337 gasless flows · LI.FI MCP server integration.
 

@@ -11,7 +11,7 @@ description: >
   route automatically: CCTP V2 for USDC pairs (zero fee), LI.FI for everything
   else. Read-only on the safe path: every cast send is preceded by a
   balance / allowance / policy check.
-version: 0.2.0
+version: 0.3.0
 requires:
   anyBins:
     - cast
@@ -78,32 +78,58 @@ The agent reads user intent, matches it to a row below, and loads the linked ref
 | "my bridge is stuck" | Resume from tx hash, retry receive or LI.FI status | [07-status-and-recovery.md](references/07-status-and-recovery.md#stuck-bridge) |
 | "what's the route for X→Y?" | Dry-run quote, no spend | [01-intent-routing.md](references/01-intent-routing.md#dry-run) |
 | "is it safe to send this tx?" | Pipe through pharos-tx-guardrail | [08-safety-integration.md](references/08-safety-integration.md) |
+| **"what can I do with my PROS?"** | Live discovery via LI.FI + Pharos matrix | [11-route-discovery.md](references/11-route-discovery.md) |
+| **"which chains can I bridge to?"** | LI.FI /chains live query | [11-route-discovery.md](references/11-route-discovery.md#1-discover-supported-chains) |
+| **"is X→Y supported?"** | Single probe via LI.FI /quote | [11-route-discovery.md](references/11-route-discovery.md#4-probe-a-corridor) |
+| **"give me cheapest / fastest / max output"** | Re-rank by user's adjective | [10-route-selection.md](references/10-route-selection.md#8-speed-vs-fee-priorities) |
 
-## How the agent picks a path
+## How the agent picks a path — LI.FI-first
+
+**Important architectural rule:** LI.FI is the universal default. CCTP V2 and Faroswap are specialized add-on quotes that the agent fetches *in parallel* when the intent type matches. The agent then ranks all returned quotes by speed → fee → output, and shows the user the best option (plus runners-up so they can override).
 
 ```
-user intent
-   │
-   ▼
-parse: (action, source_chain, dest_chain, token_in, token_out, amount, recipient)
-   │
-   ▼
-route-selection (references/10-route-selection.md)
-   │
-   ├── same chain + swap ───────────────────────────────► 04-faroswap-swap
-   │
-   ├── USDC → USDC and one chain is pharos ─────────────► 02 or 03 (CCTP V2, zero fee)
-   │
-   ├── cross-chain token-flip (PROS↔USDC, LINK→USDC, …) ► 09-lifi-bridge (LI.FI Intents)
-   │
-   ├── non-USDC token bridge ───────────────────────────► 09-lifi-bridge
-   │
-   ├── status / check tx ───────────────────────────────► 07 (CCTP) or 09 (LI.FI)
-   │
-   └── balance / "where" ───────────────────────────────► 01#balance-discovery
+parse intent (action, src, dst, token_in, token_out, amount)
+        │
+        ▼
+┌───────────────────────────────────────────────────────────┐
+│  STEP 1   Always quote LI.FI /quote                      │
+│           — covers 95% of corridors including swaps      │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌───────────────────────────────────────────────────────────┐
+│  STEP 2   Add specialized quotes if intent matches:      │
+│                                                           │
+│    USDC↔USDC + Pharos    →  ALSO quote CCTP V2 (free)   │
+│    same-chain Pharos     →  ALSO quote Faroswap         │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌───────────────────────────────────────────────────────────┐
+│  STEP 3   Rank all quotes:                               │
+│           (executionDuration asc, fee asc, output desc)  │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌───────────────────────────────────────────────────────────┐
+│  STEP 4   Show ranked list to user, mark recommendation, │
+│           wait for confirmation                          │
+└───────────────────────────────────────────────────────────┘
+        │
+        ▼
+┌───────────────────────────────────────────────────────────┐
+│  STEP 5   Execute the picked route                       │
+│           LI.FI    → references/09-lifi-bridge.md        │
+│           CCTP V2  → references/02 / 03                  │
+│           Faroswap → references/04                       │
+└───────────────────────────────────────────────────────────┘
 ```
 
-Full decision tree and parameter extraction: [references/01-intent-routing.md](references/01-intent-routing.md). Full route comparison: [references/10-route-selection.md](references/10-route-selection.md).
+Why LI.FI is default: it covers the broadest token + chain surface and returns ready-to-sign calldata. CCTP V2 wins specifically on USDC↔USDC (zero protocol fee), but only there. Faroswap matters only for same-chain Pharos swaps.
+
+Discovery questions ("what can I do with my PROS?") go through [references/11-route-discovery.md](references/11-route-discovery.md) (read-only LI.FI inspection).
+
+Full decision tree + parameter extraction: [references/01-intent-routing.md](references/01-intent-routing.md). Full route comparison + presentation contract: [references/10-route-selection.md](references/10-route-selection.md).
 
 ## Safety contract
 
@@ -144,7 +170,8 @@ omnichain-usdc-router/
 │   ├── 07-status-and-recovery.md
 │   ├── 08-safety-integration.md
 │   ├── 09-lifi-bridge.md       ← LI.FI quote / sign / status, with Intents and Polymer examples
-│   └── 10-route-selection.md   ← CCTP vs LI.FI vs Faroswap decision rules
+│   ├── 10-route-selection.md   ← LI.FI-first workflow + parallel quote + ranking + presentation
+│   └── 11-route-discovery.md   ← Live discovery: chains, tokens, tools, corridor probes
 └── evals/
     └── evals.json
 ```
@@ -156,8 +183,10 @@ omnichain-usdc-router/
 
 ## Versioning
 
-`0.2.0` — adds **LI.FI integration**: non-USDC bridges to/from Pharos (LINK, WETH, USDCe, PROS), atomic cross-chain swaps via LI.FI Intents (PROS→USDC@Base in ~13 sec), route-selection logic that compares CCTP vs LI.FI per intent.
+`0.3.0` — **LI.FI-first routing**: LI.FI is now the universal default; CCTP V2 and Faroswap are quoted in parallel only when the intent type matches (USDC↔USDC, same-chain Pharos). All quotes are ranked by (speed, fee, output) and presented to the user with the recommendation marked. Adds [11-route-discovery.md](references/11-route-discovery.md) for live discovery queries. Adds verified PROS-from-Pharos corridor matrix to `assets/lifi.json`.
 
-`0.1.0` — Pharos ↔ 6 EVM CCTP V2 chains + Faroswap swap + multi-hop (manual) + recovery. USDC only.
+`0.2.0` — added **LI.FI integration**: non-USDC bridges, atomic cross-chain swaps via Intents (PROS→USDC@Base in ~13 sec).
+
+`0.1.0` — CCTP V2 + Faroswap + manual multi-hop. USDC only.
 
 Future: Fast Transfer when Circle enables on Pharos · USDT cross-chain via LayerZero · ERC-4337 gasless flows.
