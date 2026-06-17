@@ -17,10 +17,12 @@ requires:
     - cast
     - curl
     - python
+  autoInstall: true
+  bootstrap: references/00-bootstrap.md
 env:
   - name: AGENT_PRIVATE_KEY
-    required: true
-    purpose: signing key for cast send. Never logged, never echoed.
+    required: onBroadcast
+    purpose: signing key for cast send. Never logged, never echoed. Only requested when the user actually asks to broadcast a tx — never on first install.
   - name: DODO_API_KEY
     required: false
     purpose: enables Faroswap route quotes via DODO Route API. If absent, swap falls back to direct router constructions for simple pairs only.
@@ -28,6 +30,9 @@ env:
     required: false
     purpose: raises LI.FI rate limit from 200 req / 2 hours to 200 req / minute. Skill works without it.
 ---
+
+> **Agent**: before doing anything else, read [`references/00-bootstrap.md`](references/00-bootstrap.md). It tells you how to install `cast` yourself if it's missing, which RPC endpoints to use (no API keys), and what to tell the user after install. Do not ask the user for tool installation — handle it.
+
 
 # omnichain-usdc-router
 

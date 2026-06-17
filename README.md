@@ -89,45 +89,30 @@ Pharos does **not** yet support CCTP Fast Transfer; Standard Transfer takes 8–
 
 ---
 
-## Installation
+## Install (one prompt, any AI agent)
 
-### Pharos Skill Engine / Claude Code
+This skill is **installed by the AI agent itself**, not by you. Copy the block below and paste it into Claude (web / desktop), ChatGPT, Cursor, Windsurf, Cline, or any other AI agent that can run shell commands. It works the same everywhere.
 
-```bash
-git clone https://github.com/hosein-ul/omnichain-usdc-router \
-  ~/.claude/skills/omnichain-usdc-router
-```
+> Install the Pharos Agent Skills from these GitHub repos:
+>
+> 1. `https://github.com/hosein-ul/pharos-skills` — contains two skills: `pharos-tx-guardrail` and `pharos-rwa-yield-router`.
+> 2. `https://github.com/hosein-ul/omnichain-usdc-router` — the cross-chain skill.
+>
+> For each repo, clone it into the skills directory for your platform (e.g. `~/.claude/skills/<name>/` for Claude Code, `.cursor/rules/` for Cursor — pick the right one for yourself).
+>
+> Then read each `SKILL.md` and each repo's `references/00-bootstrap.md`. Install any tools you need yourself (don't ask me — just do it; everything required is open-source and free). When you're ready, tell me what you can help me do.
+>
+> Wait for my confirmation before broadcasting any blockchain transaction.
 
-### Anvita Flow
+That's it. The agent handles cloning, installing Foundry's `cast` if it's missing, picking the right RPC endpoints — all of it. You shouldn't need to know what those words mean.
 
-Submit `https://github.com/hosein-ul/omnichain-usdc-router` in the Skill Hub.
-
-### Manual / Any AI Agent
-
-```bash
-git clone https://github.com/hosein-ul/omnichain-usdc-router
-# Point your agent to omnichain-usdc-router/SKILL.md as the entry point
-```
-
-### Prerequisites
+When the agent first asks to broadcast a transaction (a bridge or swap), it'll tell you to set a single environment variable:
 
 ```bash
-# Foundry (cast)
-curl -L https://foundry.paradigm.xyz | bash && foundryup
-cast --version
-
-# Python 3 + curl (usually preinstalled)
-python --version
-curl --version
+export AGENT_PRIVATE_KEY=0x<your dedicated agent wallet private key>
 ```
 
-### Environment variables
-
-| Var | Required | Purpose |
-|---|---|---|
-| `AGENT_PRIVATE_KEY` | ✅ yes | signing key for `cast send`; never logged |
-| `DODO_API_KEY` | optional | Faroswap route quotes via DODO API; without it, swap falls back to wrap/unwrap only |
-| `LIFI_API_KEY` | optional | raises LI.FI rate limit from 200 req / 2 hours to 200 req / minute |
+Generate a fresh key with the agent's help, fund it minimally, and treat it as a hot wallet you can sweep after each task. Full wallet model: [`references/13-wallet-and-security.md`](references/13-wallet-and-security.md). Optional extras: `DODO_API_KEY` (Faroswap quotes), `LIFI_API_KEY` (higher rate limit). Neither is needed for normal use.
 
 ---
 
