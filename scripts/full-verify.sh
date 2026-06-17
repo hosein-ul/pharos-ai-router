@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Single-command end-to-end verification for omnichain-usdc-router
+# Single-command end-to-end verification for pharos-ai-router
 #
 # Usage (Git Bash or PowerShell with bash):
-#   cd C:/projects/omnichain-usdc-router
+#   cd C:/projects/pharos-ai-router
 #   bash scripts/full-verify.sh
 #
 # What it does (in order):

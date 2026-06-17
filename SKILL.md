@@ -1,5 +1,5 @@
 ---
-name: omnichain-usdc-router
+name: pharos-ai-router
 description: >
   Conversational cross-chain router for AI agents. Bridges native Circle USDC
   between Pharos Network and 6 major EVM chains via CCTP V2, swaps tokens on
@@ -34,7 +34,7 @@ env:
 > **Agent**: before doing anything else, read [`references/00-bootstrap.md`](references/00-bootstrap.md). It tells you how to install `cast` yourself if it's missing, which RPC endpoints to use (no API keys), and what to tell the user after install. Do not ask the user for tool installation — handle it.
 
 
-# omnichain-usdc-router
+# pharos-ai-router
 
 This skill turns natural-language transfer intents into verified, multi-step on-chain executions.
 
@@ -174,7 +174,7 @@ Before every state-changing `cast send`, the agent **must**:
 ## Files
 
 ```
-omnichain-usdc-router/
+pharos-ai-router/
 ├── SKILL.md                 ← you are here
 ├── assets/
 │   ├── networks.json        ← RPC, chain ID, explorer per chain

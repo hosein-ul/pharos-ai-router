@@ -1,4 +1,4 @@
-# omnichain-usdc-router
+# pharos-ai-router
 
 **Conversational cross-chain routing for AI agents on the Pharos Network ecosystem.**
 
@@ -96,7 +96,7 @@ This skill is **installed by the AI agent itself**, not by you. Copy the block b
 > Install the Pharos Agent Skills from these GitHub repos:
 >
 > 1. `https://github.com/hosein-ul/pharos-skills` — contains two skills: `pharos-tx-guardrail` and `pharos-rwa-yield-router`.
-> 2. `https://github.com/hosein-ul/omnichain-usdc-router` — the cross-chain skill.
+> 2. `https://github.com/hosein-ul/pharos-ai-router` — the cross-chain skill.
 >
 > For each repo, clone it into the skills directory for your platform (e.g. `~/.claude/skills/<name>/` for Claude Code, `.cursor/rules/` for Cursor — pick the right one for yourself).
 >
@@ -206,7 +206,7 @@ Full templates in [`references/04-faroswap-swap.md`](references/04-faroswap-swap
 ## File structure
 
 ```
-omnichain-usdc-router/
+pharos-ai-router/
 ├── SKILL.md                          ← agent entry point + Capability Index
 ├── assets/
 │   ├── networks.json                 ← 7 chains: RPC + chain ID + explorer
@@ -321,7 +321,7 @@ Every state-changing tx is preceded by a safety contract: balance check, allowan
 Workflow:
 
 ```
-human intent → omnichain-usdc-router routes funds → pharos-tx-guardrail gates risk → pharos-rwa-yield-router picks vault → deposit
+human intent → pharos-ai-router routes funds → pharos-tx-guardrail gates risk → pharos-rwa-yield-router picks vault → deposit
 ```
 
 ---

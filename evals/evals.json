@@ -1,5 +1,5 @@
 {
-  "_comment": "Manual evaluation scenarios for omnichain-usdc-router. No automated runner — grade by inspection. Each prompt should produce an action plan + commands that, if executed with real funds, would bridge/swap USDC correctly.",
+  "_comment": "Manual evaluation scenarios for pharos-ai-router. No automated runner — grade by inspection. Each prompt should produce an action plan + commands that, if executed with real funds, would bridge/swap USDC correctly.",
   "version": "0.2.0",
   "evals": [
     {

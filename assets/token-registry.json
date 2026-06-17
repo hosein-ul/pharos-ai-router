@@ -30,7 +30,9 @@
       "_decimals": 6
     },
     "USDT0": {
-      "_source": "LayerZero OFT USDT0 — addresses from CoinGecko 'usdt0' canonical platforms map (verified 2026-06-16).",
+      "_source": "LayerZero OFT USDT0 — addresses from CoinGecko 'usdt0' canonical platforms map (verified 2026-06-16). On-chain symbol() returns 'USD₮0' (with Tether's ₮ Unicode character, U+20AE) — verification scripts must accept both 'USDT0' and 'USD₮0'.",
+      "_onchain_symbol": "USD₮0",
+      "_aliases": ["USDT0", "USD₮0"],
       "10":    "0x01bff41798a0bcf287b996046ca68b395dbc1071",
       "137":   "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
       "42161": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
@@ -57,9 +59,15 @@
       "137":   "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
       "8453":  "0x4200000000000000000000000000000000000006",
       "42161": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-      "43114": "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB",
       "1672":  "0x1f4b7011Ee3d53969bb67F59428a9ec0477856E9",
       "_note_pharos": "LI.FI registry + on-chain symbol() = 'WETH', name = 'Wrapped Ether'. Legacy WETH at 0x7d211F77... is unused.",
+      "_note_avalanche": "Avalanche has no native WETH — the 0x49D5c2Bd... contract reports symbol='WETH.e' (bridged). See WETH.e entry.",
+      "_decimals": 18
+    },
+    "WETH.e": {
+      "_source": "Bridged WETH on Avalanche — on-chain symbol() = 'WETH.e'. CoinGecko maps it under WETH platforms but the on-chain identity is WETH.e.",
+      "_aliases": ["WETHe"],
+      "43114": "0x49D5c2BdFfac6CE2BFdB6640F4F80f226bc10bAB",
       "_decimals": 18
     },
     "WPROS": {
