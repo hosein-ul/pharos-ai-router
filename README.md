@@ -91,15 +91,13 @@ Pharos does **not** yet support CCTP Fast Transfer; Standard Transfer takes 8–
 
 ## Install (one prompt, any AI agent)
 
-This skill is **installed by the AI agent itself**, not by you. Copy the block below and paste it into Claude (web / desktop), ChatGPT, Cursor, Windsurf, Cline, or any other AI agent that can run shell commands. It works the same everywhere.
+This skill is **installed by the AI agent itself**, not by you. Copy the block below and paste it into Claude code (web / desktop/ terminal), Codex, Cursor, Windsurf, Openclaw, Hermes Cline, or any other AI agent that can run shell commands. It works the same everywhere.
 
 > Install the Pharos Agent Skills from these GitHub repos:
 >
 > 1. `https://github.com/hosein-ul/pharos-skills` — contains two skills: `pharos-tx-guardrail` and `pharos-rwa-yield-router`.
 > 2. `https://github.com/hosein-ul/pharos-ai-router` — the cross-chain skill.
->
-> For each repo, clone it into the skills directory for your platform (e.g. `~/.claude/skills/<name>/` for Claude Code, `.cursor/rules/` for Cursor — pick the right one for yourself).
->
+> 
 > Then read each `SKILL.md` and each repo's `references/00-bootstrap.md`. Install any tools you need yourself (don't ask me — just do it; everything required is open-source and free). When you're ready, tell me what you can help me do.
 >
 > Wait for my confirmation before broadcasting any blockchain transaction.
