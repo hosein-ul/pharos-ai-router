@@ -18,6 +18,13 @@
 
 set -euo pipefail
 
+# Resolve python executable (wraps python3 if python is not mapped)
+if ! command -v python &> /dev/null && command -v python3 &> /dev/null; then
+  python() {
+    python3 "$@"
+  }
+fi
+
 SRC="${1:?src chain key, e.g. pharos / base / arbitrum}"
 DST="${2:?dst chain key}"
 TIN="${3:?token_in symbol, e.g. USDC / PROS}"

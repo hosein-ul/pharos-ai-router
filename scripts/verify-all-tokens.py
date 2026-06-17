@@ -16,12 +16,12 @@ ROOT = Path(__file__).resolve().parent.parent
 REGISTRY = ROOT / "assets" / "token-registry.json"
 
 CHAIN_RPC = {
-    "1":     ["https://cloudflare-eth.com", "https://eth.llamarpc.com", "https://rpc.ankr.com/eth"],
-    "10":    ["https://mainnet.optimism.io", "https://op.llamarpc.com"],
-    "137":   ["https://polygon-rpc.com", "https://rpc.ankr.com/polygon"],
-    "8453":  ["https://mainnet.base.org", "https://base.llamarpc.com"],
-    "42161": ["https://arb1.arbitrum.io/rpc", "https://arbitrum.llamarpc.com"],
-    "43114": ["https://api.avax.network/ext/bc/C/rpc", "https://avalanche.public-rpc.com"],
+    "1":     ["https://ethereum.publicnode.com", "https://eth.drpc.org", "https://1rpc.io/eth", "https://cloudflare-eth.com"],
+    "10":    ["https://optimism.publicnode.com", "https://optimism.drpc.org", "https://1rpc.io/op", "https://mainnet.optimism.io"],
+    "137":   ["https://polygon-bor-rpc.publicnode.com", "https://polygon.drpc.org", "https://1rpc.io/plg", "https://polygon-rpc.com"],
+    "8453":  ["https://mainnet.base.org", "https://base.drpc.org", "https://1rpc.io/base", "https://base.llamarpc.com"],
+    "42161": ["https://arbitrum-one.publicnode.com", "https://arbitrum.drpc.org", "https://1rpc.io/arb", "https://arb1.arbitrum.io/rpc"],
+    "43114": ["https://avalanche-c-chain.publicnode.com", "https://avalanche.drpc.org", "https://1rpc.io/avax", "https://api.avax.network/ext/bc/C/rpc"],
     "1672":  ["https://rpc.pharos.xyz"],
     "688689":["https://atlantic.dplabs-internal.com"],
 }
@@ -45,7 +45,7 @@ def rpc_call(url, addr, data):
     }).encode()
     req = urllib.request.Request(url, data=payload,
                                  headers={"Content-Type": "application/json", "User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=15) as r:
+    with urllib.request.urlopen(req, timeout=3) as r:
         body = json.loads(r.read())
     return body.get("result", "")
 
@@ -84,7 +84,7 @@ def check_token(expected_sym, chain_id, addr, expected_dec):
                                   "params":[addr,"latest"],"id":1}).encode()
             req = urllib.request.Request(rpc, data=payload,
                                          headers={"Content-Type":"application/json","User-Agent":UA})
-            code_hex = json.loads(urllib.request.urlopen(req, timeout=15).read()).get("result","") or ""
+            code_hex = json.loads(urllib.request.urlopen(req, timeout=3).read()).get("result","") or ""
             if len(code_hex) < 100:
                 last_err = f"empty bytecode via {rpc.split('//')[1].split('/')[0]}"
                 code_hex = None
@@ -107,7 +107,7 @@ def check_token(expected_sym, chain_id, addr, expected_dec):
 
     # Build the set of acceptable symbols (the registry key + any _aliases + _onchain_symbol)
     accept = {expected_sym.lower()}
-    body = json.loads(REGISTRY.read_text())["tokens"].get(expected_sym, {})
+    body = json.loads(REGISTRY.read_text(encoding="utf-8"))["tokens"].get(expected_sym, {})
     for a in body.get("_aliases", []):
         accept.add(a.lower())
     if body.get("_onchain_symbol"):
@@ -125,7 +125,11 @@ def check_token(expected_sym, chain_id, addr, expected_dec):
 
 
 def main():
-    reg = json.loads(REGISTRY.read_text())
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass
+    reg = json.loads(REGISTRY.read_text(encoding="utf-8"))
     tokens = reg["tokens"]
 
     results = []

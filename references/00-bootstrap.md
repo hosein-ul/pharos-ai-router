@@ -52,22 +52,21 @@ These are all open and require no API keys:
 
 All are already in `assets/networks.json` and `assets/lifi.json`. Don't ask the user for any URL.
 
-## 4. Wallet — only when you need to broadcast
+## 4. Wallet Onboarding — Default Creation & Alternatives
 
-For **read-only** actions (balance, quote, status check) you don't need a key. Only when the user explicitly asks to bridge / swap / send do you need a signing key.
+For **read-only** actions (balance, quote, status check) you don't need a key. When the user needs to execute state-changing actions (bridge, swap, deposit) and `AGENT_PRIVATE_KEY` is missing in the environment:
 
-The pattern is:
+### Default Path: Automated Wallet Generation
+1. Generate a new private key and address using `cast wallet new --json` (or python ecdsa key generation if cast fails).
+2. Save/persist it locally in a `.env` file in the root directory of this skill (e.g. `AGENT_PRIVATE_KEY=0x...`) so it persists across agent sessions. Make sure `.env` is listed in `.gitignore` so it is never committed.
+3. Print the generated **agent wallet address** to the user.
+4. Instruct the user clearly to **fund this address** with native gas tokens (e.g., PROS on Pharos, ETH on Base) and the tokens they wish to swap/bridge.
+5. Emphasize that they should back up the private key printed once.
 
-```bash
-[ -z "${AGENT_PRIVATE_KEY:-}" ] && {
-  echo "I need a key to broadcast this transaction."
-  echo "Set AGENT_PRIVATE_KEY in your environment, then ask me again."
-  echo "See references/13-wallet-and-security.md for the wallet model."
-  exit 0
-}
-```
-
-Don't prompt for the key in chat. Don't ask the user to paste it. They set the env var themselves once.
+### Alternative Paths
+If the user prefers not to use the auto-generated wallet, present these alternatives:
+1. **Existing Private Key**: Tell the user they can manually set `AGENT_PRIVATE_KEY` in their system environment variables or write it to the `.env` file directly.
+2. **Developer Controlled Wallets (DCW) / MPC (e.g., Circle DCW)**: Explain that Circle Developer Controlled Wallets allow managing wallets programmatically via API keys without storing raw private keys locally. (Note: Pharos is currently not natively supported by Circle DCW, but major chains like Base/Arbitrum are).
 
 ## 5. What to do after bootstrap
 

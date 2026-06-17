@@ -59,12 +59,12 @@ This thin-key model is the **simplest workable wallet for an agent on Pharos tod
 
 When Pharos has a native smart-wallet / session-key story, the skill can swap the env-var pattern for a `userOp`-based one. The reference docs that touch signing live in `02-cctp-bridge-out.md`, `03-cctp-bridge-in.md`, `04-faroswap-swap.md`, and `09-lifi-bridge.md` — those are the only places to update.
 
-## 5. What the skill does NOT do (and shouldn't)
+## 5. Wallet Initialization (How it is handled)
 
-- It does **not** generate a wallet for the user. `cast wallet new` is a one-liner; the skill expects an operator who has run it.
-- It does **not** fund the agent address. Funding is an out-of-band action.
-- It does **not** persist any state across sessions. Each invocation is stateless — the only durable state is what's on-chain plus what's in the user's terminal scrollback.
-- It does **not** integrate with browser-extension wallets (MetaMask, Rabby, etc.). Those are for humans clicking buttons. This skill is for an AI agent operating headless.
+- **Default automated creation**: If `AGENT_PRIVATE_KEY` is missing in the environment, the agent will run `cast wallet new --json` (or generate it programmatically) to create a fresh hot wallet. It saves the key to `.env` in the skill's root directory (which must be listed in `.gitignore`), shows the address to the user, and asks them to fund it.
+- **Out-of-band funding**: The user must fund this newly generated hot wallet with native gas tokens and assets.
+- **Persistence**: The wallet is persisted locally in the `.env` file across sessions.
+- **Headed/Headless operation**: The skill does **not** integrate with browser-extension wallets (MetaMask, Rabby, etc.) directly. Those are for humans. The agent uses the local file-based signing key for autonomous headless transactions.
 
 ## 6. Pre-flight (safety contract) on every state-changing call
 

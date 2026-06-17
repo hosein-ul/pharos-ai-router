@@ -106,13 +106,15 @@ This skill is **installed by the AI agent itself**, not by you. Copy the block b
 
 That's it. The agent handles cloning, installing Foundry's `cast` if it's missing, picking the right RPC endpoints — all of it. You shouldn't need to know what those words mean.
 
-When the agent first asks to broadcast a transaction (a bridge or swap), it'll tell you to set a single environment variable:
+By default, if `AGENT_PRIVATE_KEY` is missing, the agent will generate a fresh key for you automatically using `cast wallet new`, save it to `.env` in the skill's root directory, print the address, and instruct you to fund it.
+
+Alternatively, you can manually set `AGENT_PRIVATE_KEY` in your environment:
 
 ```bash
 export AGENT_PRIVATE_KEY=0x<your dedicated agent wallet private key>
 ```
 
-Generate a fresh key with the agent's help, fund it minimally, and treat it as a hot wallet you can sweep after each task. Full wallet model: [`references/13-wallet-and-security.md`](references/13-wallet-and-security.md). Optional extras: `DODO_API_KEY` (Faroswap quotes), `LIFI_API_KEY` (higher rate limit). Neither is needed for normal use.
+Or write it to `.env` directly. Treating the agent address as a hot wallet is highly recommended: fund it minimally and sweep it after tasks are complete. Full wallet model: [`references/13-wallet-and-security.md`](references/13-wallet-and-security.md). Optional extras: `DODO_API_KEY` (Faroswap quotes), `LIFI_API_KEY` (higher rate limit). Neither is needed for normal use.
 
 ---
 
